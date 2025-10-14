@@ -161,21 +161,37 @@ def get_projection(sim_id: str, years: int = 30):
 
 @app.get("/stock/{symbol}")
 async def get_stock_price(symbol: str):
-    api_key = os.getenv("ALPHA_VANTAGE_API_KEY")
-    if not api_key: raise HTTPException(500, "API key not configured")
-    url = f"https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol={symbol}&apikey={api_key}"
+    # 1. Use the new environment variable
+    api_key = os.getenv("TWELVE_DATA_API_KEY")
+    if not api_key:
+        raise HTTPException(500, "Twelve Data API key not configured")
+
+    # 2. Note the different URL structure for Twelve Data
+    # For Indian stocks like "RELIANCE.NS", you might need to use "RELIANCE:NSE"
+    # The API is generally smart enough to handle common tickers.
+    url = f"https://api.twelvedata.com/price?symbol={symbol}&apikey={api_key}"
+
     async with httpx.AsyncClient() as client:
         try:
             response = await client.get(url)
-            response.raise_for_status()
-            price = response.json().get("Global Quote", {}).get("05. price")
-            if not price:
-                if symbol.upper().endswith((".NS", ".BOM")): return {"symbol": symbol, "price": 2850.75}
-                raise HTTPException(404, f"Price not found for symbol: {symbol}")
-            return {"symbol": symbol, "price": float(price)}
-        except Exception:
-            raise HTTPException(503, "Error communicating with stock API")
+            response.raise_for_status()  # Raises an exception for 4XX or 5XX status codes
 
+            # 3. Parse the simpler JSON response from Twelve Data
+            data = response.json()
+            price = data.get("price")
+
+            if not price:
+                raise HTTPException(404, f"Price not found for symbol: {symbol}. Check if the ticker is correct.")
+
+            # The price is returned as a string, so we convert it to float
+            return {"symbol": symbol, "price": round(float(price), 2)}
+
+        except httpx.HTTPStatusError as e:
+            # Handle specific API errors, e.g., invalid symbol or key
+            raise HTTPException(status_code=e.response.status_code, detail=f"Error from stock API: {e.response.text}")
+        except Exception:
+            # Generic fallback for network issues or other errors
+            raise HTTPException(503, "Error communicating with stock API")
 
 @app.get("/commodities/gold")
 async def get_gold_price():
@@ -217,3 +233,4 @@ async def get_silver_price():
         except Exception:
             # Return a believable mock price as a fallback
             return {"metal": "Silver", "price_per_gram_inr": 95.50}
+            
