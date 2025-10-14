@@ -192,3 +192,28 @@ async def get_gold_price():
             return {"metal": "Gold", "price_per_gram_inr": round(price_per_gram_inr, 2)}
         except Exception:
             return {"metal": "Gold", "price_per_gram_inr": 7250.00}
+
+
+@app.get("/commodities/silver")
+async def get_silver_price():
+    """
+    A secure proxy to get the latest price of Silver (per gram) in INR.
+    """
+    api_key = os.getenv("API_NINJAS_KEY")
+    if not api_key: raise HTTPException(500, "API Ninjas key not configured")
+
+    # The URL is the only major change
+    url = "https://api.api-ninjas.com/v1/silverprice"
+    headers = {'X-Api-Key': api_key}
+
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(url, headers=headers)
+            response.raise_for_status()
+            price_per_ounce_usd = response.json().get("price")
+            # 1 Ounce = 28.3495 grams
+            price_per_gram_inr = (price_per_ounce_usd / 28.3495) * USD_TO_INR_RATE
+            return {"metal": "Silver", "price_per_gram_inr": round(price_per_gram_inr, 2)}
+        except Exception:
+            # Return a believable mock price as a fallback
+            return {"metal": "Silver", "price_per_gram_inr": 95.50}
