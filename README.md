@@ -1,6 +1,6 @@
 # FinSim API
 
-![GitHub top language](https://img.shields.io/github/languages/top/Jalpan04/FinSim-API) ![GitHub repo size](https://img.shields.io/github/repo-size/Jalpan04/FinSim-API) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org) [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com) ![GitHub repo size](https://img.shields.io/github/repo-size/Jalpan04/FinSim-API) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 FinSim API is a FastAPI-based backend service for the **Financial Life Event Simulator (FinSim)**. It allows users to simulate their long-term financial projection (typically 30 years) by adding real-world investments and life events, tracking how their net worth accumulates over time. It also acts as a secure API gateway/proxy for real-time stock and commodity prices.
 
